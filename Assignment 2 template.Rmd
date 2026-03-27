@@ -1,0 +1,158 @@
+---
+title: "DS Masters Statistical Computing Exam"
+author: "Your name"
+date: "`r format(Sys.time(), '%d %B %Y')`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = F, message = F, include = F, warning=F)
+```
+
+# Part B
+
+## Question 2
+
+\marginpar{\bf{[5]}}
+
+```{r}
+#Please don't change or delete this chunk
+set.seed(42)
+```
+
+a. Write a function to simulate ```nsims``` of the sum of the square of five samples from a standard normal distribution using the built-in  ```rnorm``` function. i.e. $$ Y_i = x_1^2 + x_2^2 + x_3^2 + x_4^2 + x_5^2 $$  where $$ X \sim N(0,1) $$ \marginpar{(2)}
+
+```{r}
+
+
+```
+
+b. Using ```nsims = 10000```, generate nsims of the above and plot the empirical distribution. Title the plot with the name of the theoretical distribution that your empirical distribution should resemble, and add a vertical line on the plot of the mean value of the theoretical distribution. \marginpar{(3)}
+
+```{r}
+
+
+```
+
+\vspace{20pt} 
+
+## Question 3
+
+\marginpar{\bf{[12]}}
+
+```{r}
+#Please don't change or delete this chunk
+set.seed(121)
+```
+
+a. WITHOUT using ```rexp``` or any of the other built-in exponential distribution functions, write a function ```exp_sim``` to simulate ```n_exp``` realizations of an exponential distribution with a rate parameter of 0.5. (You may use other built-in R functions). \marginpar{(2)}
+
+```{r}
+
+
+```
+
+b. Use the function above and ```n_exp = 50000``` to work out $Var(X)$ using numerical integration. Save your answer as an object ```var_exp```. \marginpar{(2)}
+
+```{r}
+
+
+```
+
+Now, use the function in (a) above to simulate ```n_exp = 100``` realizations of the specified exponential distribution to use as the sample data for questions (c) and (d) below. Save the data into an object called ```exp_data```.
+
+```{r}
+
+
+```
+      
+c. Write a function to calculate the maximum likelihood estimate of an exponential distribution using the Newton-Raphson method and ```exp_data```. Hint: Use the log-likelihood of the exponential distribution. Make sure your code prints the value of the mle estimate when it is run. \marginpar{(6)}
+
+```{r}
+
+
+```
+
+d. Use ```exp_data``` and ```optim``` to compute the maximum likelihood estimate of the exponential distribution. Make sure your code prints the value of the mle estimate, and the convergence value of the algorithm when it is run. \marginpar{(2)}
+
+```{r}
+
+
+```
+
+\vspace{20pt} 
+
+## Question 4
+
+\marginpar{\bf{[9]}}
+
+```{r}
+#Please don't change or delete this chunk
+set.seed(123)
+```
+
+Suppose that the daily claim (X) an insurance company faces can be modelled using a Gumbel distribution with parameters $\mu$, and $\sigma$. The \textbf{log-likelihood function} of a Gumbel distribution simplifies to $$l(x) = -n \log \sigma +  \sum_{i=1}^n \log t(x_i) - \sum_{i=1}^n t(x_i)$$  where $$t(x) = e^{-(x-\mu)/\sigma} \quad \textrm{ with} \; \mu \in \Re \; \textrm{and} \; 0<\sigma< \infty.$$ \vspace{.25cm}
+
+Claims data (measured in thousands of Rands) for the company are stored in the file named ```claimsdata.csv```. Save the data into your working directory and then read it into R. 
+
+```{r}
+
+
+```
+
+a. Write a function to calculate the value of $t(x)$. Name the function ```tx``` and use only two arguments, namely ```params``` and ```x```. The vector ```params``` contains the parameter values $\mu$ and $\sigma$ while ```x``` is the claims data. Evaluate your  ```tx``` function using the $500^{\textrm{th}}$ claim and set ```params = c(25, 2)```. Name the object ```eval_tx```. You should get a value of 1.268522. \marginpar{(3)}
+
+```{r}
+
+
+```
+
+b. Write a function to calculate the log-likelihood value. Name your function ```logl``` and include two arguments namely ```params``` and ```x```. Use ```optim``` to obtain the values of $\mu$ and $\sigma$ that maximizes the log-likelihood function. These values are termed the \textbf{maximum likelihood estimates} of $\mu$ and $\sigma$ and are denoted as $\hat \mu$ and $\hat \sigma$. Set the starting values of your ```optim``` call to the sample mean and standard deviation of the claims data. Store $\hat \mu$ and $\hat \sigma$ as an object named ```mle```. \marginpar{(6)}
+
+```{r}
+
+
+```
+
+\vspace{20pt} 
+   
+## Question 5 
+\marginpar{\bf{[9]}} 
+
+```{r}
+#Please don't change or delete this chunk
+set.seed(100)
+```
+
+An experiment is conducted in which a fair coin is tossed until two consecutive  ```tails``` are observed. Estimate the mean number of coin tosses.  \vspace{.25cm}
+
+Example sequences of the above experiment are shown below:
+```
+H = Head is observed, T = Tail is observed
+
+H T T  #number of tosses = 3
+H H T H T T  #number of tosses = 6
+T H T H H T H T H H T H T T  #number of tosses = 14
+```
+
+a. Write a function named ```flip``` that undertakes the sampling to output an appropriate numeric value if a ```tail``` is observed after the toss of a coin and another numeric value otherwise. 	\marginpar{(2)} 
+	 
+```{r}
+
+
+```
+
+b. Write a function named ```toss_to_TT``` that returns the number of tosses required for one experiment (i.e. until you observe two consecutive tails). \marginpar{(5)}} 
+	
+```{r}
+
+
+```
+
+c. Generate $10\;000$ random sequences using  ```toss_to_TT``` and store the results in an object named ```rand_TT```. Now estimate the mean number of tosses required until you observe two consecutive tails. (```mean_flips```) \marginpar{(2)}
+
+```{r}
+
+
+```
+
