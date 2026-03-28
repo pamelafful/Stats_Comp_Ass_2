@@ -119,7 +119,7 @@ liklihood=function(lambda,sim_data=exp_data){
   sx=sum(sim_data)
   n=length(sim_data)
   
-  #n*log(lambda)-(lambda*sx) # log liklihood estimator
+  n*log(lambda)-(lambda*sx) # log liklihood estimator
   log(  (lambda**n)*exp(-lambda*sx)   )
   
 }
@@ -173,6 +173,8 @@ Suppose that the daily claim (X) an insurance company faces can be modelled usin
 Claims data (measured in thousands of Rands) for the company are stored in the file named `claimsdata.csv`. Save the data into your working directory and then read it into R.
 
 ```{r}
+claims=read.csv2('claims_data.csv')
+claims$daily=as.numeric(claims$daily)
 
 
 ```
@@ -180,15 +182,40 @@ Claims data (measured in thousands of Rands) for the company are stored in the f
 a.  Write a function to calculate the value of $t(x)$. Name the function `tx` and use only two arguments, namely `params` and `x`. The vector `params` contains the parameter values $\mu$ and $\sigma$ while `x` is the claims data. Evaluate your `tx` function using the $500^{\textrm{th}}$ claim and set `params = c(25, 2)`. Name the object `eval_tx`. You should get a value of 1.268522. \marginpar{(3)}
 
 ```{r}
+tx=function(x,params){
+  u=params[1]
+  sd=params[2]
+  
+ result= exp( -(x-u)/sd )
+return(result)
+}
 
+x=claims$daily[500]
+params=c(25,2)
+eval_tx=tx(x,params)
 
 ```
 
 b.  Write a function to calculate the log-likelihood value. Name your function `logl` and include two arguments namely `params` and `x`. Use `optim` to obtain the values of $\mu$ and $\sigma$ that maximizes the log-likelihood function. These values are termed the \textbf{maximum likelihood estimates} of $\mu$ and $\sigma$ and are denoted as $\hat \mu$ and $\hat \sigma$. Set the starting values of your `optim` call to the sample mean and standard deviation of the claims data. Store $\hat \mu$ and $\hat \sigma$ as an object named `mle`. \marginpar{(6)}
 
 ```{r}
+log_liklihood=function(x,params){
+  n=length(x)
+  log_func_sum=sum(log(sapply(x,tx, params)))
+  func_sum=sum(sapply(x,tx,params))
+  sd=params[2]
+  result=-n*log(sd)+log_func_sum-func_sum
+  return(result)
+  
+}
 
-
+x=claims$daily
+start_u=mean(x)
+start_sd=sqrt(var(x))
+params_start=c(start_u,start_sd)
+mle_func=optim(params_start,fn=log_liklihood,x=x,control=list(fnscale=-1))
+mle=mle_func$par
+mle
 ```
 
 \vspace{20pt}
