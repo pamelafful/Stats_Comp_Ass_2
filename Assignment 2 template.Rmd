@@ -244,20 +244,64 @@ T H T H H T H T H H T H T T  #number of tosses = 14
 a.  Write a function named `flip` that undertakes the sampling to output an appropriate numeric value if a `tail` is observed after the toss of a coin and another numeric value otherwise. \marginpar{(2)}
 
 ```{r}
+flip= function(n){
+  h_ead=0
+  t_ail=1
+  coin_flip=runif(n)
+  if(coin_flip<0.5){
+    result=h_ead}
+  else{
 
+        result=t_ail}
+  
+  return(result)
+}
 
+flip(1)
 ```
 
 b.  Write a function named `toss_to_TT` that returns the number of tosses required for one experiment (i.e. until you observe two consecutive tails). \marginpar{(5)}}
 
 ```{r}
+toss_to_TT=function(){
+  
+  n=1
+  index_n=c(n)
+  flip_result=c() 
+  flip_result[1]=flip(1) # initialize the first value of the flip
+  index_n[1]=n # initialize the first value of the number of flips
+  
+  diff_vec=1:1
 
+  repeat{
+    n=n+1
+    flip_result=c(flip_result,flip(1))
+    latest_diff_vec=diff(flip_result)
+    latest_diff_val=latest_diff_vec[length(latest_diff_vec)]
+    diff_vec=c(diff_vec,latest_diff_val)
+    index_n=c(index_n,n)
+  
+  
+  if ( (diff_vec[length(diff_vec)]==0) && (flip_result[length(flip_result)]==1)) {
+    break
+  }
+
+  }
+  number_flips_til_TT=n
+  return (number_flips_til_TT)   
+
+
+}
+toss_to_TT()
 
 ```
+
 
 c.  Generate $10\;000$ random sequences using `toss_to_TT` and store the results in an object named `rand_TT`. Now estimate the mean number of tosses required until you observe two consecutive tails. (`mean_flips`) \marginpar{(2)}
 
 ```{r}
 
-
+n_times=10000
+number_flips_vec=replicate(n = n_times, expr = toss_to_TT())
+round(mean(number_flips_vec))
 ```
