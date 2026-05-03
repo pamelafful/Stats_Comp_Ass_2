@@ -115,35 +115,48 @@ exp_data=exp_sim(n_exp)
 c.  Write a function to calculate the maximum likelihood estimate of an exponential distribution using the Newton-Raphson method and `exp_data`. Hint: Use the log-likelihood of the exponential distribution. Make sure your code prints the value of the mle estimate when it is run. \marginpar{(6)}b
 
 ```{r}
+#install.packages('numDeriv')
+library(numDeriv)
 liklihood=function(lambda,sim_data=exp_data){
   sx=sum(sim_data)
   n=length(sim_data)
   
   n*log(lambda)-(lambda*sx) # log liklihood estimator
-  log(  (lambda**n)*exp(-lambda*sx)   )
+  #log(  (lambda**n)*exp(-lambda*sx)   )
   
 }
 start_lambda=0.5
 
-newton <- function(f,tol=1E-12,x0=start_lambda,N=1000) {
-h <- 0.001
+newton = function(f,tol=1E-12,x0=start_lambda,N=1000) {
+  
+
 i <- 1; x1 <- x0
-p <- numeric(N)
-while (i<=N) {
+p <- numeric(N) #store next xi/iterations-root approximations
+for (i in 1:N) {
   print(paste(i,' iteration'))
-df.dx <- (f(x0+h)-f(x0))/h
-x1 <- (x0 - (f(x0)/df.dx))
-p[i] <- x1
-i <- i + 1
-if (abs((x1-x0)/x0) < tol) break
-x0 <- x1
+
+df.dx  =  genD(func = f, x = x0)$D[1]#   (f(x0+h)-f(x0))/h
+if (df.dx==0) break
+
+x1  =  (x0 - (f(x0)/df.dx))
+
+if (is.na(x1) || is.infinite(x1)) break
+
+p[i]  =  x1
+i  =  i + 1
+
+
+if (abs((x1-x0)) < tol) break
+x0  =  x1
+
 }
-return(p[i-1]) # mle estimate p[1:(i-1)]
+return(x0) 
+
+
 }
+
 
 newton(liklihood)
-
-
 
 
 
@@ -152,8 +165,8 @@ newton(liklihood)
 d.  Use `exp_data` and `optim` to compute the maximum likelihood estimate of the exponential distribution. Make sure your code prints the value of the mle estimate, and the convergence value of the algorithm when it is run. \marginpar{(2)}
 
 ```{r}
-start_lambda=0.001
-optim(start_lambda,fn=liklihood,sim_data=exp_data,control=list(fnscale=-1))
+start_lambda=0.5
+optim(start_lambda,fn=liklihood,sim_data=exp_data,method='L-BFGS-B',lower=0.0001,upper=10000, control=list(fnscale=-1)  )
 
 ```
 
@@ -192,7 +205,7 @@ return(result)
 
 x=claims$daily[500]
 params=c(25,2)
-eval_tx=tx(x,params)
+eval_tx=tx(x,params);eval_tx
 
 ```
 
@@ -244,10 +257,10 @@ T H T H H T H T H H T H T T  #number of tosses = 14
 a.  Write a function named `flip` that undertakes the sampling to output an appropriate numeric value if a `tail` is observed after the toss of a coin and another numeric value otherwise. \marginpar{(2)}
 
 ```{r}
-flip= function(n){
+flip= function(){
   h_ead=0
   t_ail=1
-  coin_flip=runif(n)
+  coin_flip=runif(1)
   if(coin_flip<0.5){
     result=h_ead}
   else{
@@ -257,7 +270,7 @@ flip= function(n){
   return(result)
 }
 
-flip(1)
+flip()
 ```
 
 b.  Write a function named `toss_to_TT` that returns the number of tosses required for one experiment (i.e. until you observe two consecutive tails). \marginpar{(5)}}
@@ -268,14 +281,14 @@ toss_to_TT=function(){
   n=1
   index_n=c(n)
   flip_result=c() 
-  flip_result[1]=flip(1) # initialize the first value of the flip
+  flip_result[1]=flip() # initialize the first value of the flip
   index_n[1]=n # initialize the first value of the number of flips
   
   diff_vec=1:1
 
   repeat{
     n=n+1
-    flip_result=c(flip_result,flip(1))
+    flip_result=c(flip_result,flip())
     latest_diff_vec=diff(flip_result)
     latest_diff_val=latest_diff_vec[length(latest_diff_vec)]
     diff_vec=c(diff_vec,latest_diff_val)
@@ -296,12 +309,11 @@ toss_to_TT()
 
 ```
 
-
 c.  Generate $10\;000$ random sequences using `toss_to_TT` and store the results in an object named `rand_TT`. Now estimate the mean number of tosses required until you observe two consecutive tails. (`mean_flips`) \marginpar{(2)}
 
 ```{r}
 
 n_times=10000
 number_flips_vec=replicate(n = n_times, expr = toss_to_TT())
-round(mean(number_flips_vec))
+mean_flips=round(mean(number_flips_vec));mean_flips
 ```
