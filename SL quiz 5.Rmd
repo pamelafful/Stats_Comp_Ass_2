@@ -1,0 +1,59 @@
+---
+title: "Quiz 5"
+author: "Pamela Afful"
+date: "2026-05-12"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+```{r}
+dataQ1
+```
+
+```{r}
+library(dplyr)
+library(ggplot2)
+dataQ1 %>% ggplot(aes(x=x1,y=x2,color=y)) +
+  geom_point() +
+  theme_minimal()
+```
+
+train[c(20, 39 , 6 ,24 ,48, 31 ,12 ,55 ,56, 50 ,84 ,81,123, 91,113 ,135 ,83, 125),]
+
+```{r}
+library(e1071)
+set.seed(1)
+train_ind=sample(seq_len(nrow(dataQ1)), size = floor(0.80 * nrow(dataQ1)))
+train=dataQ1[train_ind,]
+test=dataQ1[-train_ind,]
+
+x=train[,1:2]
+y=train$y
+
+svm_fit=svm(x, y, cost=1,type='C-classification') 
+sv_df=data.frame(svm_fit$SV)
+sv_ind=as.numeric(rownames(sv_df))
+
+train[sv_ind,] %>%
+group_by(y) %>% summarize(length(x1))
+
+
+svm_fit$coefs
+
+t(svm_fit$coefs) %*% svm_fit$SV # take dot product 
+
+
+round(svm_fit$rho,3)
+
+```
+
+```{r}
+c(sv_ind)
+
+c(20, 39 , 6 ,24 ,48, 31 ,12 ,55 ,56, 50 ,84 ,81,123, 91,113 ,135 ,83, 125)
+```
