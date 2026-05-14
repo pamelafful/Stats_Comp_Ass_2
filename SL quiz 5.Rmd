@@ -12,7 +12,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ## R Markdown
 
 ```{r}
-dataQ1
+dataQ1$y=factor(dataQ1$y,levels=c(-1,1))
 ```
 
 ```{r}
@@ -36,19 +36,37 @@ x=train[,1:2]
 y=train$y
 
 svm_fit=svm(x, y, cost=1,type='C-classification') 
-sv_df=data.frame(svm_fit$SV)
-sv_ind=as.numeric(rownames(sv_df))
+# sv_df=data.frame(svm_fit$SV)
+# sv_ind=as.numeric(rownames(sv_df))
+# 
+# train[sv_ind,] %>%
+# group_by(y) %>% summarize(length(x1))
+# 
+# 
+# svm_fit$coefs
+# 
+# t(svm_fit$coefs) %*% svm_fit$SV # take dot product 
+# 
+# 
+# round(svm_fit$rho,3)
+train[svm_fit$index,] %>% count(y)
 
-train[sv_ind,] %>%
-group_by(y) %>% summarize(length(x1))
+# Get slope
 
-
-svm_fit$coefs
-
-t(svm_fit$coefs) %*% svm_fit$SV # take dot product 
-
+weights=t(svm_fit$coefs) %*% svm_fit$SV
+slope=weights[1]/weights[2]
+round(slope,3)
 
 round(svm_fit$rho,3)
+
+### slacks
+
+d_values <- attr(predict(svm_fit, decision.values = TRUE), "decision.values")
+
+y_true_svm <- as.numeric(as.character(train[svm_fit$index,]$y))
+
+slacks <- pmax(0, 1 - y_true_svm * d_values)
+slacks
 
 ```
 
@@ -81,12 +99,12 @@ sum(ifelse( (sv_slacks>0 & sv_slacks<1)  ,1,0)) # cnt of 0<e<1 slack variables
 
 sum(ifelse(sv_slacks>1,1,0))
 ```
+
 ```{r}
 
 # i is misclassified iif yi*(wx+b)>=1-e
 #yi*(wx+b)+e>=1
 
-y*(svm_fit$coefs+svm_fit$rho)+sv_slacks
 
 length(y)
 length(svm_fit$coefs+svm_fit$rho)
@@ -109,12 +127,108 @@ pred_test <- predict(svm_fit, test[,1:2], decision.values = TRUE)
 dv_test <- attr(pred_test, "decision.values")
 y_test=test$y
 
-margin_test <- y_test * dv_test
 
+margin_test <- y_test * dv_test
 xi_test <- pmax(0, 1 - margin_test) # slack var
 
 round((sum(margin_test >= 0)/length(y_test))*100,3)
 
 length(margin_test)
+
+```
+
+```{r}
+set.seed(1)
+names(train)
+tuned <- tune.svm(
+  y ~ .,
+  data = train,
+  kernel = "linear",
+  cost = seq(from=0.05, to=100,by=0.05),
+  tunecontrol = tune.control(cross = 10),
+  type='C-classification'
+)
+
+tuning_results <- tuned$performances
+tuned$best.model
+```
+
+```{r}
+svm_fit=svm(x, y, cost=100,type='C-classification') 
+pred_decision <- predict(svm_fit, x)
+dv_train <- attr(pred_decision, "decision.values")
+
+round(mean(pred_decision ==y)*100,3)
+```
+
+```{r}
+set.seed(1)
+load('pimaDiabetes.RData (1)')
+
+pimaDiabetes$testDiabetes=factor(pimaDiabetes$testDiabetes,levels=c(0,1))
+train_ind=sample(seq_len(nrow(pimaDiabetes)), size = floor(0.80 * nrow(pimaDiabetes)))
+train=pimaDiabetes[train_ind,]
+test=pimaDiabetes[-train_ind,]
+
+y=train$testDiabetes
+x=subset(train, select = -testDiabetes)
+svm_fit=svm(x, y, cost=1,type='C-classification',kernel='radial',gamma=1,scale=T) 
+dim(svm_fit$SV)
+length(svm_fit$index)
+
+pred_decision <- predict(svm_fit, x)
+
+round(mean(pred_decision==y)*100,3)
+
+
+pred_test <- predict(svm_fit, newdata=subset(test, select = -testDiabetes))
+round(mean(pred_test==test$testDiabetes)*100,3)
+
+```
+
+```{r}
+
+test$pred=pred_test
+
+test %>% mutate(is_corr= if_else(testDiabetes==pred,0,1)) %>% 
+  group_by(testDiabetes) %>% summarise(nr_miss=sum(is_corr)) %>% 
+  left_join(test %>% count(testDiabetes),by='testDiabetes') %>% 
+  mutate(`miss_class_%`=nr_miss/n) %>% 
+  mutate(`corr_class_%`=1-`miss_class_%`)
+
+```
+
+```{r}
+set.seed(1)
+
+
+tuned <- tune.svm(
+  testDiabetes ~ .,
+  data = train,
+  kernel = "radial",
+  cost = c(0.01, 0.05, 0.1, 0.5, 1, 5, 10, 15, 20, 100),
+  gamma=c(0.1, 0.001, 0.00001),
+  tunecontrol = tune.control(cross = 10),
+  type='C-classification'
+)
+
+tuning_results <- tuned$performances
+tuned$best.model
+
+pred_train<- predict(tuned$best.model,newdata= subset(train,select=-testDiabetes))
+round(mean(pred_train==train$testDiabetes)*100,3)
+
+pred_test<- predict(tuned$best.model,newdata=subset(test,select=-testDiabetes))
+round(mean(pred_test==test$testDiabetes)*100,3)
+
+
+
+test$cv_pred=pred_test
+
+test %>% mutate(is_corr= if_else(testDiabetes==cv_pred,0,1)) %>% 
+  group_by(testDiabetes) %>% summarise(nr_miss=sum(is_corr)) %>% 
+  left_join(test %>% count(testDiabetes),by='testDiabetes') %>% 
+  mutate(`miss_class_%`=nr_miss/n) %>% 
+  mutate(`corr_class_%`=1-`miss_class_%`)
 
 ```
