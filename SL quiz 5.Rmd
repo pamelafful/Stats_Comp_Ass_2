@@ -61,12 +61,44 @@ round(svm_fit$rho,3)
 
 ### slacks
 
-d_values <- attr(predict(svm_fit, decision.values = TRUE), "decision.values")
+d_values <- attr(predict(svm_fit,newdata=x, decision.values = TRUE), "decision.values")
 
 y_true_svm <- as.numeric(as.character(train[svm_fit$index,]$y))
 
 slacks <- pmax(0, 1 - y_true_svm * d_values)
-slacks
+
+zero_sl=sum(ifelse(slacks==0,1,0));zero_sl # nr of zero slack SV
+margin_vi=sum(ifelse(slacks>0 & slacks<1 ,1,0));margin_vi # nr of margin violations SV
+sl_vi=sum(ifelse(slacks>1 ,1,0));sl_vi  #nr of misclassiffied violations SV
+
+
+# For obs
+
+y_true_svm <- as.numeric(as.character(train$y))
+
+slacks <- pmax(0, 1 - y_true_svm * d_values)
+
+zero_sl=sum(ifelse(slacks==0,1,0)) # nr of zero slack SV
+margin_vi=sum(ifelse(slacks>0 & slacks<1 ,1,0));margin_vi # nr of margin violations SV
+sl_vi=sum(ifelse(slacks<1 ,1,0));sl_vi  #nr of misclassiffied violations SV
+
+
+#misclassified <- sum(y_true_svm * d_values < 0)
+
+
+margin_violations_obs <- sum(slacks > 0 & y_true_svm  * d_values > 0)
+
+misclassified <- sum(y_true_svm * d_values < 0);misclassified
+
+
+zero_slack <- sum(slacks == 0); round( (zero_slack/length(slacks)*100),3)
+
+
+###
+
+test
+
+mean(unlist(predict(svm_fit,newdata=subset(test,select= -y)))==test$y)/length(test$y)
 
 ```
 
